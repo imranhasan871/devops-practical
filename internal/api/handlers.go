@@ -43,6 +43,22 @@ type ErrorResponse struct {
 	Code    int    `json:"code"`
 }
 
+// GetIndex handles GET / — returns a brief API index.
+func (h *Handler) GetIndex(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"service":  "devops-practical",
+		"version":  h.version,
+		"endpoints": []string{
+			"GET  /status",
+			"GET  /data",
+			"POST /data",
+			"GET  /healthz",
+			"GET  /readyz",
+			"GET  /metrics",
+		},
+	})
+}
+
 // GetStatus handles GET /status
 func (h *Handler) GetStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, StatusResponse{

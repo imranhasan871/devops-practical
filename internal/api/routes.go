@@ -37,6 +37,7 @@ func NewRouter(version string) http.Handler {
 	r.Handle("/metrics", promhttp.Handler())
 
 	// application routes
+	r.Get("/", h.GetIndex)
 	r.Get("/status", h.GetStatus)
 	r.Post("/data", h.PostData)
 	r.Get("/data", h.GetData)
