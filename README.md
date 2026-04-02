@@ -92,6 +92,36 @@ curl -X POST http://<LB_IP>/data \
 
 ---
 
+## Containerization Approach
+
+The application is packaged using a **two-stage Docker build**:
+
+| Stage | Base image | Purpose |
+|-------|-----------|---------|
+| `builder` | `golang:1.22-alpine` | Compiles a fully static binary (`CGO_ENABLED=0`) with debug info stripped (`-ldflags "-w -s"`) |
+| `final` | `alpine:3.19` | Minimal runtime image — only the compiled binary + CA certs + timezone data |
+
+**Key production practices baked into the Dockerfile:**
+
+- **Non-root user** — a dedicated `appuser:appgroup` is created; the container never runs as root
+- **Layer caching** — `go.mod`/`go.sum` are copied and modules downloaded before the source, so a code change does not re-download dependencies
+- **Static binary** — no Go runtime or libc required in the final image; image size is ~15 MB
+- **Exec-form `ENTRYPOINT`** — signals (`SIGTERM`) reach the Go process directly, not a shell wrapper, which is required for graceful shutdown
+- **`.dockerignore`** — excludes `bin/`, `.env`, `terraform/`, and test artefacts from the build context
+
+**Environment configuration** is injected at runtime via environment variables (never baked into the image):
+
+```
+PORT          – HTTP listen port (default 8080)
+ENV           – development | production  (controls log format)
+APP_VERSION   – populated by CI from the git SHA
+```
+
+**Local:** `docker compose -f infra/docker-compose.yml up -d --build`
+**Production:** image pulled from DOCR; tag pinned to the git commit SHA by CI
+
+---
+
 ## How ~100 req/s Is Handled
 
 - **Go's HTTP server** uses one goroutine per request, scheduled by the Go runtime. A single `s-1vcpu-2gb` Droplet comfortably handles 300–500 req/s for this workload.
