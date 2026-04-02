@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+*.md
+bin/
+tmp/
+.github/
+k8s/
+terraform/
+monitoring/
+scripts/
+*.test
