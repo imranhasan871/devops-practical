@@ -1,0 +1,33 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: "production"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # targets: ["alertmanager:9093"]  # uncomment when you add alertmanager
+
+rule_files: []
+  # - "alerts/*.yml"
+
+scrape_configs:
+  # prometheus scrapes itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # app - prometheus annotations on the pod/container drive this in k8s
+  # for docker compose we target by service name
+  - job_name: "go-api"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["app:8080"]
+    metrics_path: /metrics
+
+  # nginx - exposes metrics via nginx-prometheus-exporter (optional)
+  # - job_name: "nginx"
+  #   static_configs:
+  #     - targets: ["nginx-exporter:9113"]
