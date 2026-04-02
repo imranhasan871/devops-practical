@@ -9,7 +9,8 @@ on:
 env:
   GO_VERSION: "1.22"
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/devops-practical
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-api
+  NGINX_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-nginx
 
 jobs:
   # ------------------------------------------------------------------ #
@@ -73,7 +74,7 @@ jobs:
         id: image-tag
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "tag=${{ env.IMAGE_PREFIX }}/api:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag=${{ env.API_IMAGE }}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -85,7 +86,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.image-tag.outputs.tag }}
-            ${{ env.IMAGE_PREFIX }}/api:latest
+            ${{ env.API_IMAGE }}:latest
           build-args: |
             APP_VERSION=${{ github.sha }}
           cache-from: type=gha
@@ -97,8 +98,8 @@ jobs:
           context: ./infra/nginx
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/nginx:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/nginx:latest
+            ${{ env.NGINX_IMAGE }}:${{ github.sha }}
+            ${{ env.NGINX_IMAGE }}:latest
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
