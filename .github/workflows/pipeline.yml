@@ -13,8 +13,8 @@ permissions:
 env:
   GO_VERSION: "1.22"
   REGISTRY: ghcr.io
-  API_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-api
-  NGINX_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-nginx
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-go-api
+  NGINX_IMAGE: ghcr.io/${{ github.repository_owner }}/devops-practical-reverse-proxy
 
 jobs:
   # ------------------------------------------------------------------ #

@@ -31,13 +31,13 @@ variable "ssh_public_key" {
 variable "app_image" {
   description = "Full Docker image reference for the API"
   type        = string
-  default     = "ghcr.io/imranhasan871/devops-practical-api:latest"
+  default     = "ghcr.io/imranhasan871/devops-practical-go-api:latest"
 }
 
 variable "nginx_image" {
   description = "Full Docker image reference for nginx"
   type        = string
-  default     = "ghcr.io/imranhasan871/devops-practical-nginx:latest"
+  default     = "ghcr.io/imranhasan871/devops-practical-reverse-proxy:latest"
 }
 
 variable "ghcr_user" {
