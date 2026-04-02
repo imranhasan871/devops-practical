@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-api
+  namespace: devops-practical
+  labels:
+    app: go-api
+spec:
+  type: ClusterIP
+  selector:
+    app: go-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

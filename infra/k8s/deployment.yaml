@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-api
+  namespace: devops-practical
+  labels:
+    app: go-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: go-api
+
+  # RollingUpdate ensures zero downtime:
+  # - maxUnavailable: 0  → never reduce capacity during a rollout
+  # - maxSurge: 1        → allow one extra pod while the new version starts
+  # New pod must pass readinessProbe before traffic is shifted.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: go-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "8080"
+        prometheus.io/path:   "/metrics"
+    spec:
+      # give the app 30s to finish in-flight requests before forceful kill
+      terminationGracePeriodSeconds: 30
+
+      # don't run as root
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: api
+          image: ghcr.io/imranhasan871/devops-practical:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+
+          envFrom:
+            - configMapRef:
+                name: app-config
+
+          # secrets (e.g. DB password) come from a Secret, not the ConfigMap
+          # env:
+          #   - name: DB_PASSWORD
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: app-secrets
+          #         key: db-password
+
+          resources:
+            requests:
+              cpu:    "100m"
+              memory: "64Mi"
+            limits:
+              cpu:    "500m"
+              memory: "128Mi"
+
+          # liveness: if the app stops responding, restart it
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # readiness: only send traffic once the app is fully initialised
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

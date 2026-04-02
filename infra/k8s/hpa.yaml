@@ -1,0 +1,44 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: go-api
+  namespace: devops-practical
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: go-api
+
+  minReplicas: 3
+  maxReplicas: 10
+
+  metrics:
+    # scale up when average CPU across pods exceeds 60%
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+
+    # also scale on memory - useful for this kind of in-memory workload
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30   # react quickly to traffic spikes
+      policies:
+        - type:          Pods
+          value:         2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300  # wait 5 min before scaling down (avoid flapping)
+      policies:
+        - type:          Pods
+          value:         1
+          periodSeconds: 120

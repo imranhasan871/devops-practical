@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: devops-practical
+data:
+  PORT: "8080"
+  ENV: "production"
+  # APP_VERSION is injected at deploy time via kustomize or helm --set
