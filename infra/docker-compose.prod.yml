@@ -1,0 +1,33 @@
+# Production overrides - used with:
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Scales the app to 3 replicas behind nginx.
+# Nginx uses least_conn load balancing across all replicas.
+
+services:
+    app:
+        image: ${IMAGE_TAG:-ghcr.io/imranhasan871/devops-practical:latest}
+        build: !reset null # don't build in prod - use pre-built image
+        deploy:
+            replicas: 3
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: start-first # start new before stopping old = zero downtime
+            restart_policy:
+                condition: on-failure
+        environment:
+            ENV: production
+
+    nginx:
+        image: ${NGINX_IMAGE_TAG:-ghcr.io/imranhasan871/devops-practical-nginx:latest}
+        build: !reset null
+
+    prometheus:
+        environment:
+            # retain 30 days in production
+            RETENTION: '30d'
+
+    grafana:
+        environment:
+            GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
