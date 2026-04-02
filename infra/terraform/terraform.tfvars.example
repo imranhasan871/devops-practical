@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and fill in real values.
+# terraform.tfvars is git-ignored - never commit it.
+
+do_token       = "dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+region         = "nyc3"
+environment    = "production"
+droplet_size   = "s-1vcpu-2gb"
+droplet_count  = 2
+registry_name  = "devops-practical"
+app_image      = "registry.digitalocean.com/devops-practical/api:latest"
+ssh_public_key = "ssh-ed25519 AAAA... your-key-here"
