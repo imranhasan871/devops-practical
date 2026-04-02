@@ -17,31 +17,37 @@ variable "environment" {
 }
 
 variable "droplet_size" {
-  description = "Droplet size slug (see: doctl compute size list)"
+  description = "Droplet size slug"
   type        = string
-  default     = "s-1vcpu-2gb"
-}
-
-variable "droplet_count" {
-  description = "Number of app Droplets to provision behind the load balancer"
-  type        = number
-  default     = 2
+  default     = "s-1vcpu-1gb"
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key to install on Droplets for emergency access"
+  description = "SSH public key to install on the Droplet"
   type        = string
   sensitive   = true
 }
 
 variable "app_image" {
-  description = "Full Docker image reference to run on first boot (e.g. registry.digitalocean.com/myregistry/devops-practical:sha-abc)"
+  description = "Full Docker image reference for the API"
   type        = string
-  default     = "ghcr.io/imranhasan871/devops-practical:latest"
+  default     = "ghcr.io/imranhasan871/devops-practical/api:latest"
 }
 
-variable "registry_name" {
-  description = "DigitalOcean Container Registry name"
+variable "nginx_image" {
+  description = "Full Docker image reference for nginx"
   type        = string
-  default     = "devops-practical"
+  default     = "ghcr.io/imranhasan871/devops-practical/nginx:latest"
+}
+
+variable "ghcr_user" {
+  description = "GitHub username for ghcr.io authentication"
+  type        = string
+  default     = "imranhasan871"
+}
+
+variable "ghcr_token" {
+  description = "GitHub PAT with read:packages scope for pulling from ghcr.io"
+  type        = string
+  sensitive   = true
 }

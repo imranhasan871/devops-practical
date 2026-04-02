@@ -13,6 +13,15 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
 log "deploying image: $IMAGE_TAG"
 
+# log in to ghcr.io if credentials are available
+ENV_FILE="/opt/devops-practical/.env"
+if [[ -f "$ENV_FILE" ]]; then
+  # shellcheck source=/dev/null
+  source "$ENV_FILE"
+  echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+  log "authenticated with ghcr.io"
+fi
+
 cd "$COMPOSE_DIR"
 
 # record the currently running image so we can roll back if the new one fails
@@ -25,16 +34,16 @@ log "previous image: ${PREVIOUS_IMAGE_TAG:-unknown}"
 log "pulling image..."
 docker pull "$IMAGE_TAG"
 
-export IMAGE_TAG
+# write the pinned tag into the compose override so the correct image is used
+cat > "$COMPOSE_DIR/docker-compose.override.yml" <<EOF
+version: "3.9"
+services:
+  app:
+    image: ${IMAGE_TAG}
+EOF
 
-# bring up the new container alongside the existing one
-# docker compose starts the new container first (start-first rolling policy)
-# nginx will naturally load balance new requests to whichever replica is healthy
 log "starting new containers..."
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.prod.yml \
-  up -d --no-deps --remove-orphans app
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d --no-deps --remove-orphans app
 
 # wait for the new instance to pass its health check
 log "waiting for health check at $HEALTH_URL..."

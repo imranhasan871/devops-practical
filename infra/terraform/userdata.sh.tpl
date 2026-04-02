@@ -27,15 +27,10 @@ apt-get install -yq docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 systemctl enable --now docker
 
-# ---- install doctl (used to authenticate with DO Container Registry) ----
-curl -sL https://github.com/digitalocean/doctl/releases/latest/download/doctl-$(curl -s https://api.github.com/repos/digitalocean/doctl/releases/latest | grep tag_name | cut -d '"' -f 4 | tr -d 'v')-linux-amd64.tar.gz \
-  | tar xz -C /usr/local/bin doctl
+# ---- authenticate with GitHub Container Registry ----
+echo "${ghcr_token}" | docker login ghcr.io -u "${ghcr_user}" --password-stdin
 
-# ---- authenticate with DigitalOcean Container Registry ----
-doctl auth init --access-token "${do_token}"
-doctl registry login --expiry-seconds 0   # non-expiring credentials on the Droplet
-
-# ---- start the application ----
+# ---- deploy the application stack ----
 mkdir -p /opt/devops-practical/infra
 cd /opt/devops-practical/infra
 
@@ -48,17 +43,33 @@ services:
     environment:
       PORT: "8080"
       ENV: production
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
+
+  nginx:
+    image: ${nginx_image}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      app:
+        condition: service_healthy
 COMPOSE
 
 docker compose pull
 docker compose up -d
+
+# persist credentials so future deploy.sh runs can also pull
+mkdir -p /opt/devops-practical/infra
+cat > /opt/devops-practical/.env <<ENV
+GHCR_TOKEN=${ghcr_token}
+GHCR_USER=${ghcr_user}
+ENV
 
 echo "bootstrap complete"
